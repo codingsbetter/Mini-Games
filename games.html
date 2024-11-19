@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Games with ChatGPT-like Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #4CAF50;
+        }
+
+        .game-container {
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .input-box input {
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        .output-box {
+            margin-top: 10px;
+        }
+
+        .output-box p {
+            font-weight: bold;
+        }
+
+        .chat-container {
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .chat-box {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .chat-box p {
+            margin: 5px 0;
+        }
+
+        .chat-box .user-message {
+            text-align: right;
+            color: #4CAF50;
+        }
+
+        .chat-box .bot-message {
+            text-align: left;
+            color: #333;
+        }
+
+        .chat-input input {
+            width: 80%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        .chat-input button {
+            padding: 8px 15px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mini Games with ChatGPT-like Bot</h1>
+
+    <div id="game-options">
+        <button onclick="startGame('guessing')">Number Guessing Game</button>
+        <button onclick="startGame('math')">Math Quiz Game</button>
+        <button onclick="startGame('typing')">Typing Speed Test</button>
+        <button onclick="startGame('adventure')">Text Adventure Game</button>
+        <button onclick="startGame('chatbot')">Chat with ChatGPT-like Bot</button>
+    </div>
+
+    <div id="game-container" class="game-container"></div>
+    <div id="chat-container" class="chat-container" style="display: none;">
+        <h2>Chat with ChatGPT-like Bot</h2>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="chat-input">
+            <input type="text" id="chat-input" placeholder="Type your message here">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Global context tracker
+        let context = {
+            lastMessage: "",
+            hasStartedGame: false,
+            gameChoice: "",
+            isPlaying: false,
+            isTypingTest: false,
+            isMathQuiz: false,
+            guessedNumber: false,
+            guessedCorrectly: false,
+            hasAnsweredMath: false,
+        };
+
+        // Start the correct game based on button click
+        function startGame(game) {
+            const container = document.getElementById("game-container");
+            container.innerHTML = ''; // Clear previous game
+            document.getElementById("chat-container").style.display = 'none'; // Hide chatbot
+            context.gameChoice = game;
+            context.isPlaying = true;
+            context.guessedNumber = false;
+            context.guessedCorrectly = false;
+            context.hasAnsweredMath = false;
+
+            switch (game) {
+                case 'guessing':
+                    startNumberGuessingGame();
+                    break;
+                case 'math':
+                    startMathQuizGame();
+                    break;
+                case 'typing':
+                    startTypingSpeedTest();
+                    break;
+                case 'adventure':
+                    startTextAdventureGame();
+                    break;
+                case 'chatbot':
+                    startChatBot();
+                    break;
+                default:
+                    container.innerHTML = "<p>Invalid Game</p>";
+            }
+        }
+
+        // Start Chatbot
+        function startChatBot() {
+            const container = document.getElementById("game-container");
+            document.getElementById("chat-container").style.display = 'block';
+            container.innerHTML = ''; // Clear previous game
+
+            const chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML = "<p>Bot: Hello! How can I help you today?</p>";
+
+            document.getElementById("chat-input").addEventListener("keydown", function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        // Handle user input and bot response
+        function sendMessage() {
+            const userMessage = document.getElementById("chat-input").value;
+            if (userMessage.trim() === '') return;
+
+            const chatBox = document.getElementById("chat-box");
+
+            // Display user message
+            const userMessageElement = document.createElement("p");
+            userMessageElement.classList.add("user-message");
+            userMessageElement.textContent = `You: ${userMessage}`;
+            chatBox.appendChild(userMessageElement);
+
+            // Clear input field
+            document.getElementById("chat-input").value = '';
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Generate bot response with context awareness
+            setTimeout(() => {
+                const botResponse = generateBotResponse(userMessage);
+                const botMessageElement = document.createElement("p");
+                botMessageElement.classList.add("bot-message");
+                botMessageElement.textContent = `Bot: ${botResponse}`;
+                chatBox.appendChild(botMessageElement);
+
+                // Scroll to the bottom after bot response
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+        }
+
+        // Advanced bot response generation
+        function generateBotResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            let response = "";
+
+            // Basic greetings and casual responses
+            if (message.includes('hello') || message.includes('hi')) {
+                response = "Hello! How's your day going?";
+            } else if (message.includes('how are you') || message.includes('how are you doing')) {
+                response = "I'm doing great! Thanks for asking. How about you?";
+            } else if (message.includes('what is your name') || message.includes('who are you')) {
+                response = "I'm your friendly chatbot, here to help you with mini-games and fun conversations!";
+            } else if (message.includes('goodbye') || message.includes('bye')) {
+                response = "Goodbye! I hope we chat again soon!";
+                context.isPlaying = false; // Stop games
+            } else if (message.includes('thank you') || message.includes('thanks')) {
+                response = "You're welcome! Always happy to help!";
+            } 
+
+            // Game-specific responses
+            if (message.includes('game') || message.includes('play')) {
+                response = "I can help you with several games! Which one would you like to try?";
+                context.hasStartedGame = true;
+            }
+
+            if (message.includes('number guessing') || message.includes('guessing')) {
+                if (!context.guessedNumber) {
+                    response = "Let's play the number guessing game! Guess a number between 1 and 100.";
+                } else {
+                    response = "You already started a guessing game. Want to continue or try a new one?";
+                }
+            }
+
+            if (message.includes('math quiz') || message.includes('math')) {
+                if (!context.hasAnsweredMath) {
+                    response = "Let's test your math skills! What is 5 + 7?";
+                    context.isMathQuiz = true;
+                } else {
+                    response = "You’ve already answered a math question. Would you like to try another?";
+                }
+            }
+
+            if (message.includes('typing test') || message.includes('typing')) {
+                response = "Let's see how fast you can type! Ready for the typing test?";
+            }
+
+            if (message.includes('adventure') || message.includes('explore')) {
+                response = "I see you're ready for an adventure! Let's journey through the enchanted forest!";
+            }
+
+            // Fallback response
+            if (context.isPlaying && !response) {
+                response = "Hmm, I didn’t quite catch that. Could you rephrase it? I’m happy to help!";
+            }
+
+            return response;
+        }
+
+        // Example for Number Guessing Game (simplified)
+        function startNumberGuessingGame() {
+            const container = document.getElementById("game-container");
+            const number = Math.floor(Math.random() * 100) + 1;
+            let attempts = 0;
+
+            container.innerHTML = `
+                <h2>Number Guessing Game</h2>
+                <p>Guess a number between 1 and 100</p>
+                <div class="input-box">
+                    <input type="number" id="guess" placeholder="Enter your guess">
+                    <button id="guess-button">Guess</button>
+                </div>
+                <div class="output-box" id="guess-output"></div>
+            `;
+
+            document.getElementById("guess-button").addEventListener("click", function() {
+                checkGuess();
+            });
+
+            document.getElementById("guess").addEventListener("keydown", function(event) {
+                if (event.key === 'Enter') {
+                    checkGuess();
+                }
+            });
+
+            function checkGuess() {
+                const userGuess = parseInt(document.getElementById("guess").value);
+                attempts++;
+
+                const output = document.getElementById("guess-output");
+
+                if (userGuess < number) {
+                    output.innerHTML = "Too low! Try again.";
+                } else if (userGuess > number) {
+                    output.innerHTML = "Too high! Try again.";
+                } else if (userGuess === number) {
+                    output.innerHTML = `Correct! You guessed the number in ${attempts} attempts.`;
+                    context.guessedCorrectly = true;
+                } else {
+                    output.innerHTML = "Please enter a valid number.";
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
